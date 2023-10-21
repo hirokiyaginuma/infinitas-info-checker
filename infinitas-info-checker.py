@@ -25,13 +25,17 @@ def save_content(content):
     with open("content.html", 'w', encoding="utf-8") as file:
         file.write(content)
 
-def check_for_update():
+def check_for_update(event, context):
     response = requests.get(website_url)
     if response.status_code == 200:
         current_content = response.text
         info_main = BeautifulSoup(current_content, "html.parser").find(id="info-main")
 
-        save_content(str(info_main))
+        if info_main == None:
+            print("The website is under maintenance.")
+            return
+
+        #save_content(str(info_main))
 
         info1 = info_main.div
 
@@ -63,5 +67,5 @@ def send_line_notify(message):
     requests.post(line_notify_api, headers = headers, data = data)
 
 if __name__ == "__main__":
-    check_for_update()
+    check_for_update(None, None)
     
