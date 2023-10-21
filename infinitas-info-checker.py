@@ -3,6 +3,7 @@ import hashlib
 import os
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from google.cloud import storage
 
 website_url = "https://p.eagate.573.jp/game/infinitas/2/index.html"
 hash_file = "hash.txt"
@@ -10,16 +11,31 @@ hash_file = "hash.txt"
 def calculate_hash(content):
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
-def read_previous_hash():
+def read_previous_hash_local():
     if os.path.exists(hash_file):
         with open(hash_file, 'r') as file:
             return file.read().strip()
     else:
         return ''
 
-def save_current_hash(hash_value):
+def save_current_hash_local(hash_value):
     with open(hash_file, 'w') as file:
         file.write(hash_value)
+
+def save_current_hash(hash_value):
+    client = storage.Client.from_service_account_json('infinitas-info-checker-fdfd12269caf.json')
+    bucket = client.get_bucket('infinitas-info-checker')
+    blob = bucket.blob(hash_file)
+    with blob.open("w") as f:
+        f.write(hash_value)
+
+def read_previous_hash():
+    client = storage.Client.from_service_account_json('infinitas-info-checker-fdfd12269caf.json')
+    bucket = client.get_bucket('infinitas-info-checker')
+    blob = bucket.blob(hash_file)
+    with blob.open("r") as f:
+        content = f.read()
+    return content
 
 def save_content(content):
     with open("content.html", 'w', encoding="utf-8") as file:
@@ -68,4 +84,6 @@ def send_line_notify(message):
 
 if __name__ == "__main__":
     check_for_update(None, None)
+    #print(read_previous_hash())
+    #save_current_hash('123456')
     
